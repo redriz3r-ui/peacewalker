@@ -24,14 +24,28 @@
 /* End PBXContainerItemProxy section */
 
 /* Begin PBXFileReference section */
+		2E629B102CE55DD60054C56D /* CoreData.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = CoreData.framework; path = Platforms/MacOSX.platform/Developer/SDKs/MacOSX15.1.sdk/System/Library/Frameworks/CoreData.framework; sourceTree = DEVELOPER_DIR; };
 		2E7B2FF42CDD74B800A67EEF /* PeaceWalker.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = PeaceWalker.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		2E7B30042CDD74BA00A67EEF /* PeaceWalkerTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = PeaceWalkerTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		2E7B300E2CDD74BA00A67EEF /* PeaceWalkerUITests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = PeaceWalkerUITests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
 
+/* Begin PBXFileSystemSynchronizedBuildFileExceptionSet section */
+		2E7B30382CDEA00900A67EEF /* Exceptions for "PeaceWalker" folder in "PeaceWalker" target */ = {
+			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
+			membershipExceptions = (
+				Info.plist,
+			);
+			target = 2E7B2FF32CDD74B800A67EEF /* PeaceWalker */;
+		};
+/* End PBXFileSystemSynchronizedBuildFileExceptionSet section */
+
 /* Begin PBXFileSystemSynchronizedRootGroup section */
 		2E7B2FF62CDD74B800A67EEF /* PeaceWalker */ = {
 			isa = PBXFileSystemSynchronizedRootGroup;
+			exceptions = (
+				2E7B30382CDEA00900A67EEF /* Exceptions for "PeaceWalker" folder in "PeaceWalker" target */,
+			);
 			path = PeaceWalker;
 			sourceTree = "<group>";
 		};
@@ -72,12 +86,21 @@
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
+		2E629B0F2CE55DD60054C56D /* Frameworks */ = {
+			isa = PBXGroup;
+			children = (
+				2E629B102CE55DD60054C56D /* CoreData.framework */,
+			);
+			name = Frameworks;
+			sourceTree = "<group>";
+		};
 		2E7B2FEB2CDD74B800A67EEF = {
 			isa = PBXGroup;
 			children = (
 				2E7B2FF62CDD74B800A67EEF /* PeaceWalker */,
 				2E7B30072CDD74BA00A67EEF /* PeaceWalkerTests */,
 				2E7B30112CDD74BA00A67EEF /* PeaceWalkerUITests */,
+				2E629B0F2CE55DD60054C56D /* Frameworks */,
 				2E7B2FF52CDD74B800A67EEF /* Products */,
 			);
 			sourceTree = "<group>";
@@ -393,11 +416,14 @@
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				CODE_SIGN_ENTITLEMENTS = PeaceWalker/PeaceWalker.entitlements;
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
 				DEVELOPMENT_ASSET_PATHS = "\"PeaceWalker/Preview Content\"";
+				DEVELOPMENT_TEAM = H37S63Z3YA;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = PeaceWalker/Info.plist;
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
 				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
@@ -421,11 +447,14 @@
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				CODE_SIGN_ENTITLEMENTS = PeaceWalker/PeaceWalker.entitlements;
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
 				DEVELOPMENT_ASSET_PATHS = "\"PeaceWalker/Preview Content\"";
+				DEVELOPMENT_TEAM = H37S63Z3YA;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = PeaceWalker/Info.plist;
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
 				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
@@ -450,6 +479,7 @@
 				BUNDLE_LOADER = "$(TEST_HOST)";
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = H37S63Z3YA;
 				GENERATE_INFOPLIST_FILE = YES;
 				IPHONEOS_DEPLOYMENT_TARGET = 18.1;
 				MARKETING_VERSION = 1.0;
@@ -468,6 +498,7 @@
 				BUNDLE_LOADER = "$(TEST_HOST)";
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = H37S63Z3YA;
 				GENERATE_INFOPLIST_FILE = YES;
 				IPHONEOS_DEPLOYMENT_TARGET = 18.1;
 				MARKETING_VERSION = 1.0;
@@ -485,6 +516,7 @@
 			buildSettings = {
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = H37S63Z3YA;
 				GENERATE_INFOPLIST_FILE = YES;
 				MARKETING_VERSION = 1.0;
 				PRODUCT_BUNDLE_IDENTIFIER = rowellreyes.PeaceWalkerUITests;
@@ -501,6 +533,7 @@
 			buildSettings = {
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = H37S63Z3YA;
 				GENERATE_INFOPLIST_FILE = YES;
 				MARKETING_VERSION = 1.0;
 				PRODUCT_BUNDLE_IDENTIFIER = rowellreyes.PeaceWalkerUITests;
