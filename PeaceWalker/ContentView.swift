@@ -2,6 +2,8 @@ import SwiftUI
 import Foundation
 import HealthKit
 import SwiftData
+import CoreLocation
+import MapKit
 
 func saveLastStepCount(_ steps: Int) {
     UserDefaults.standard.set(steps, forKey: "lastStepCount")
@@ -22,22 +24,22 @@ struct ContentView: View {
     @State private var journeyStartTime: Date?
     @State private var isWalkSessionsVisible: Bool = false
     @Query var journeys: [Journey]
+    @State private var route: MKRoute?
+    @State private var userLocation = CLLocationCoordinate2D(latitude: 36.7378, longitude: -119.7871) // Default to Fresno
     
     @Environment(\.modelContext) private var modelContext
     
     let destinations = ["Visalia", "Clovis", "Kearney Park"]
-    let distances: [String: Double] = [
-        "Visalia": 43.0,
-        "Clovis": 9.2,
-        "Kearney Park": 7.8
-    ]
     
     var body: some View {
         ScrollView {
             VStack(spacing: 20) {
-                Text("WalkMap: Virtual Travel Journey")
+                Text("WalkMap🌎")
                     .font(.title)
-                    .padding()
+                
+                Text("Virtual Travel Journey")
+                    .font(.caption)
+
                 
                 // Destination Picker
                 Picker("Select Destination", selection: $selectedDestination) {
@@ -62,18 +64,37 @@ struct ContentView: View {
                 // Display Journey Data
                 if journeyStarted, let currentJourney = getCurrentJourney() {
                     VStack {
+                        Text("Your Journey")
+                             .font(.title)
+                             .padding()
+
+                         MapView(route: $route, userLocation: $userLocation)
+                             .frame(height: 300)
+                             .cornerRadius(10)
+                             .padding()
+                        ZStack {
+                            ProgressView(value: progressPercentage)
+                                .progressViewStyle(LinearProgressViewStyle())
+                                .frame(width: 100, height: 100)
+                                .padding()
+
+                            Text("\(Int(progressPercentage * 100))%")
+                                .font(.headline)
+                                .foregroundColor(.blue)
+                        }
                         Text("Total Steps: \(currentJourney.totalSteps)")
                         Text("Distance Walked: \(currentJourney.distanceWalked, specifier: "%.2f") Miles")
                         
                         let distanceLeft = max(currentJourney.targetDistance - currentJourney.distanceWalked, 0.0)
                         Text("Distance Left: \(distanceLeft, specifier: "%.2f") Miles")
-                        Text("Progress: \(Int(progressPercentage * 100))%")
                         
                         // Button to Update Progress
                         Button("Update Steps") {
                             print("[Update Steps] Button pressed")
                             updateProgress(for: currentJourney)
+                                
                         }
+                        .padding()
                         
                         // Button to Toggle Walk Sessions List
                         Button("Show/Hide Walk Sessions") {
@@ -93,6 +114,8 @@ struct ContentView: View {
                                 .padding(.bottom, 5)
                             }
                         }
+                        
+                        
                         
                         // Button to Reset Journey
                         Button("Reset Journey") {
@@ -139,10 +162,26 @@ struct ContentView: View {
             journeyStartTime = journey.startDate
             progressPercentage = ProgressManager.shared.getCurrentProgress(journey: journey)
             journeyUpdate = RouteManager.shared.getJourneyUpdate(progress: progressPercentage)
+            
+            // Recalculate the route for the current destination
+            route = nil
+            if let destinationInfo = RouteManager.shared.destinationData[destination] {
+                let destinationCoordinates = destinationInfo.coordinates
+                RouteManager.shared.calculateWalkingRoute(from: userLocation, to: destination) { calculatedRoute in
+                    if let newRoute = calculatedRoute {
+                        self.route = newRoute
+                        print("[checkForExistingJourney] Route updated for \(destination)")
+                    } else {
+                        print("[checkForExistingJourney] Failed to update route for \(destination)")
+                    }
+                }
+            }
+            
             print("[checkForExistingJourney] Loaded existing journey for \(destination)")
         } else {
             journeyStarted = false
             journeyUpdate = "" // Clear the update message if no journey is found
+            route = nil // Clear the route when no journey exists
             print("[checkForExistingJourney] No existing journey for \(destination)")
         }
     }
@@ -181,27 +220,51 @@ struct ContentView: View {
     }
     
     private func resetJourney(for journey: Journey) {
-        journey.distanceWalked = 0.0
-        journey.stepCount = 0
-        journey.totalSteps = 0
-        journey.walkSessions.removeAll()
-        progressPercentage = 0.0
-        journeyUpdate = ""
-        lastStepCount = 0
-        journeyStarted = false
-        journeyStartTime = nil
-        try? modelContext.save()
-        print("[resetJourney] Journey reset for \(journey.destination)")
+        print("[resetJourney] Attempting to delete journey for \(journey.destination)")
+
+        // Delete the journey from the model context
+        modelContext.delete(journey)
+
+        // Save the context after deletion
+        do {
+            try modelContext.save()
+            journeyStarted = false
+            journeyUpdate = ""
+            journeyStartTime = nil
+            lastStepCount = 0
+            progressPercentage = 0.0
+            print("[resetJourney] Successfully deleted journey for \(journey.destination)")
+        } catch {
+            print("[resetJourney] Failed to delete journey: \(error.localizedDescription)")
+        }
     }
     
     private func startJourney(for destination: String) {
         print("[Start Journey] Button pressed for \(destination)")
         
+        if let destinationInfo = RouteManager.shared.destinationData[selectedDestination] {
+            let destinationCoordinates = destinationInfo.coordinates
+            RouteManager.shared.calculateWalkingRoute(from: userLocation, to: selectedDestination) { calculatedRoute in
+                if let route = calculatedRoute {
+                    self.route = route
+                }
+            }
+        }
+        
         if getCurrentJourney() == nil {
             let startDate = Date()
             let startLocation = "Fresno"
-            let targetDistanceInMiles = distances[destination] ?? 0.0
+
+            // Safely unwrap the destination data
+            guard let destinationInfo = RouteManager.shared.destinationData[selectedDestination] else {
+                print("[startJourney] No data found for \(destination)")
+                return
+            }
             
+            let targetDistanceInMiles = destinationInfo.targetDistance
+            let destinationCoordinates = destinationInfo.coordinates
+            
+            // Create a new Journey object
             let newJourney = Journey(
                 startDate: startDate,
                 startLocation: startLocation,
@@ -209,6 +272,7 @@ struct ContentView: View {
                 targetDistance: targetDistanceInMiles
             )
             
+            // Insert and save the new journey
             modelContext.insert(newJourney)
             try? modelContext.save()
             

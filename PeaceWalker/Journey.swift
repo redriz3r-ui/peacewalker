@@ -10,7 +10,8 @@ class Journey {
     var distanceWalked: Double
     var stepCount: Int
     var totalSteps: Int
-    var walkSessions: [WalkSession] // Add this line
+    var walkSessions: [WalkSession]
+    // Add this line
 
     init(startDate: Date, startLocation: String, destination: String, targetDistance: Double) {
         self.startDate = startDate
