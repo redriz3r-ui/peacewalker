@@ -25,18 +25,18 @@
 
 /* Begin PBXFileReference section */
 		2E629B102CE55DD60054C56D /* CoreData.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = CoreData.framework; path = Platforms/MacOSX.platform/Developer/SDKs/MacOSX15.1.sdk/System/Library/Frameworks/CoreData.framework; sourceTree = DEVELOPER_DIR; };
-		2E7B2FF42CDD74B800A67EEF /* PeaceWalker.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = PeaceWalker.app; sourceTree = BUILT_PRODUCTS_DIR; };
-		2E7B30042CDD74BA00A67EEF /* PeaceWalkerTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = PeaceWalkerTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
-		2E7B300E2CDD74BA00A67EEF /* PeaceWalkerUITests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = PeaceWalkerUITests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
+		2E7B2FF42CDD74B800A67EEF /* MapWalker.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = MapWalker.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		2E7B30042CDD74BA00A67EEF /* MapWalkerTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = MapWalkerTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
+		2E7B300E2CDD74BA00A67EEF /* MapWalkerUITests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = MapWalkerUITests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
 
 /* Begin PBXFileSystemSynchronizedBuildFileExceptionSet section */
-		2E7B30382CDEA00900A67EEF /* Exceptions for "PeaceWalker" folder in "PeaceWalker" target */ = {
+		2E7B30382CDEA00900A67EEF /* Exceptions for "PeaceWalker" folder in "MapWalker" target */ = {
 			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
 			membershipExceptions = (
 				Info.plist,
 			);
-			target = 2E7B2FF32CDD74B800A67EEF /* PeaceWalker */;
+			target = 2E7B2FF32CDD74B800A67EEF /* MapWalker */;
 		};
 /* End PBXFileSystemSynchronizedBuildFileExceptionSet section */
 
@@ -44,7 +44,7 @@
 		2E7B2FF62CDD74B800A67EEF /* PeaceWalker */ = {
 			isa = PBXFileSystemSynchronizedRootGroup;
 			exceptions = (
-				2E7B30382CDEA00900A67EEF /* Exceptions for "PeaceWalker" folder in "PeaceWalker" target */,
+				2E7B30382CDEA00900A67EEF /* Exceptions for "PeaceWalker" folder in "MapWalker" target */,
 			);
 			path = PeaceWalker;
 			sourceTree = "<group>";
@@ -108,9 +108,9 @@
 		2E7B2FF52CDD74B800A67EEF /* Products */ = {
 			isa = PBXGroup;
 			children = (
-				2E7B2FF42CDD74B800A67EEF /* PeaceWalker.app */,
-				2E7B30042CDD74BA00A67EEF /* PeaceWalkerTests.xctest */,
-				2E7B300E2CDD74BA00A67EEF /* PeaceWalkerUITests.xctest */,
+				2E7B2FF42CDD74B800A67EEF /* MapWalker.app */,
+				2E7B30042CDD74BA00A67EEF /* MapWalkerTests.xctest */,
+				2E7B300E2CDD74BA00A67EEF /* MapWalkerUITests.xctest */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -118,9 +118,9 @@
 /* End PBXGroup section */
 
 /* Begin PBXNativeTarget section */
-		2E7B2FF32CDD74B800A67EEF /* PeaceWalker */ = {
+		2E7B2FF32CDD74B800A67EEF /* MapWalker */ = {
 			isa = PBXNativeTarget;
-			buildConfigurationList = 2E7B30182CDD74BA00A67EEF /* Build configuration list for PBXNativeTarget "PeaceWalker" */;
+			buildConfigurationList = 2E7B30182CDD74BA00A67EEF /* Build configuration list for PBXNativeTarget "MapWalker" */;
 			buildPhases = (
 				2E7B2FF02CDD74B800A67EEF /* Sources */,
 				2E7B2FF12CDD74B800A67EEF /* Frameworks */,
@@ -133,16 +133,16 @@
 			fileSystemSynchronizedGroups = (
 				2E7B2FF62CDD74B800A67EEF /* PeaceWalker */,
 			);
-			name = PeaceWalker;
+			name = MapWalker;
 			packageProductDependencies = (
 			);
 			productName = PeaceWalker;
-			productReference = 2E7B2FF42CDD74B800A67EEF /* PeaceWalker.app */;
+			productReference = 2E7B2FF42CDD74B800A67EEF /* MapWalker.app */;
 			productType = "com.apple.product-type.application";
 		};
-		2E7B30032CDD74BA00A67EEF /* PeaceWalkerTests */ = {
+		2E7B30032CDD74BA00A67EEF /* MapWalkerTests */ = {
 			isa = PBXNativeTarget;
-			buildConfigurationList = 2E7B301B2CDD74BA00A67EEF /* Build configuration list for PBXNativeTarget "PeaceWalkerTests" */;
+			buildConfigurationList = 2E7B301B2CDD74BA00A67EEF /* Build configuration list for PBXNativeTarget "MapWalkerTests" */;
 			buildPhases = (
 				2E7B30002CDD74BA00A67EEF /* Sources */,
 				2E7B30012CDD74BA00A67EEF /* Frameworks */,
@@ -156,16 +156,16 @@
 			fileSystemSynchronizedGroups = (
 				2E7B30072CDD74BA00A67EEF /* PeaceWalkerTests */,
 			);
-			name = PeaceWalkerTests;
+			name = MapWalkerTests;
 			packageProductDependencies = (
 			);
 			productName = PeaceWalkerTests;
-			productReference = 2E7B30042CDD74BA00A67EEF /* PeaceWalkerTests.xctest */;
+			productReference = 2E7B30042CDD74BA00A67EEF /* MapWalkerTests.xctest */;
 			productType = "com.apple.product-type.bundle.unit-test";
 		};
-		2E7B300D2CDD74BA00A67EEF /* PeaceWalkerUITests */ = {
+		2E7B300D2CDD74BA00A67EEF /* MapWalkerUITests */ = {
 			isa = PBXNativeTarget;
-			buildConfigurationList = 2E7B301E2CDD74BA00A67EEF /* Build configuration list for PBXNativeTarget "PeaceWalkerUITests" */;
+			buildConfigurationList = 2E7B301E2CDD74BA00A67EEF /* Build configuration list for PBXNativeTarget "MapWalkerUITests" */;
 			buildPhases = (
 				2E7B300A2CDD74BA00A67EEF /* Sources */,
 				2E7B300B2CDD74BA00A67EEF /* Frameworks */,
@@ -179,11 +179,11 @@
 			fileSystemSynchronizedGroups = (
 				2E7B30112CDD74BA00A67EEF /* PeaceWalkerUITests */,
 			);
-			name = PeaceWalkerUITests;
+			name = MapWalkerUITests;
 			packageProductDependencies = (
 			);
 			productName = PeaceWalkerUITests;
-			productReference = 2E7B300E2CDD74BA00A67EEF /* PeaceWalkerUITests.xctest */;
+			productReference = 2E7B300E2CDD74BA00A67EEF /* MapWalkerUITests.xctest */;
 			productType = "com.apple.product-type.bundle.ui-testing";
 		};
 /* End PBXNativeTarget section */
@@ -209,7 +209,7 @@
 					};
 				};
 			};
-			buildConfigurationList = 2E7B2FEF2CDD74B800A67EEF /* Build configuration list for PBXProject "PeaceWalker" */;
+			buildConfigurationList = 2E7B2FEF2CDD74B800A67EEF /* Build configuration list for PBXProject "MapWalker" */;
 			developmentRegion = en;
 			hasScannedForEncodings = 0;
 			knownRegions = (
@@ -223,9 +223,9 @@
 			projectDirPath = "";
 			projectRoot = "";
 			targets = (
-				2E7B2FF32CDD74B800A67EEF /* PeaceWalker */,
-				2E7B30032CDD74BA00A67EEF /* PeaceWalkerTests */,
-				2E7B300D2CDD74BA00A67EEF /* PeaceWalkerUITests */,
+				2E7B2FF32CDD74B800A67EEF /* MapWalker */,
+				2E7B30032CDD74BA00A67EEF /* MapWalkerTests */,
+				2E7B300D2CDD74BA00A67EEF /* MapWalkerUITests */,
 			);
 		};
 /* End PBXProject section */
@@ -281,12 +281,12 @@
 /* Begin PBXTargetDependency section */
 		2E7B30062CDD74BA00A67EEF /* PBXTargetDependency */ = {
 			isa = PBXTargetDependency;
-			target = 2E7B2FF32CDD74B800A67EEF /* PeaceWalker */;
+			target = 2E7B2FF32CDD74B800A67EEF /* MapWalker */;
 			targetProxy = 2E7B30052CDD74BA00A67EEF /* PBXContainerItemProxy */;
 		};
 		2E7B30102CDD74BA00A67EEF /* PBXTargetDependency */ = {
 			isa = PBXTargetDependency;
-			target = 2E7B2FF32CDD74B800A67EEF /* PeaceWalker */;
+			target = 2E7B2FF32CDD74B800A67EEF /* MapWalker */;
 			targetProxy = 2E7B300F2CDD74BA00A67EEF /* PBXContainerItemProxy */;
 		};
 /* End PBXTargetDependency section */
@@ -494,7 +494,7 @@
 				SWIFT_EMIT_LOC_STRINGS = NO;
 				SWIFT_VERSION = 5.0;
 				TARGETED_DEVICE_FAMILY = "1,2";
-				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/PeaceWalker.app/$(BUNDLE_EXECUTABLE_FOLDER_PATH)/PeaceWalker";
+				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/MapWalker.app/$(BUNDLE_EXECUTABLE_FOLDER_PATH)/MapWalker";
 			};
 			name = Debug;
 		};
@@ -513,7 +513,7 @@
 				SWIFT_EMIT_LOC_STRINGS = NO;
 				SWIFT_VERSION = 5.0;
 				TARGETED_DEVICE_FAMILY = "1,2";
-				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/PeaceWalker.app/$(BUNDLE_EXECUTABLE_FOLDER_PATH)/PeaceWalker";
+				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/MapWalker.app/$(BUNDLE_EXECUTABLE_FOLDER_PATH)/MapWalker";
 			};
 			name = Release;
 		};
@@ -554,7 +554,7 @@
 /* End XCBuildConfiguration section */
 
 /* Begin XCConfigurationList section */
-		2E7B2FEF2CDD74B800A67EEF /* Build configuration list for PBXProject "PeaceWalker" */ = {
+		2E7B2FEF2CDD74B800A67EEF /* Build configuration list for PBXProject "MapWalker" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
 				2E7B30162CDD74BA00A67EEF /* Debug */,
@@ -563,7 +563,7 @@
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;
 		};
-		2E7B30182CDD74BA00A67EEF /* Build configuration list for PBXNativeTarget "PeaceWalker" */ = {
+		2E7B30182CDD74BA00A67EEF /* Build configuration list for PBXNativeTarget "MapWalker" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
 				2E7B30192CDD74BA00A67EEF /* Debug */,
@@ -572,7 +572,7 @@
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;
 		};
-		2E7B301B2CDD74BA00A67EEF /* Build configuration list for PBXNativeTarget "PeaceWalkerTests" */ = {
+		2E7B301B2CDD74BA00A67EEF /* Build configuration list for PBXNativeTarget "MapWalkerTests" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
 				2E7B301C2CDD74BA00A67EEF /* Debug */,
@@ -581,7 +581,7 @@
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;
 		};
-		2E7B301E2CDD74BA00A67EEF /* Build configuration list for PBXNativeTarget "PeaceWalkerUITests" */ = {
+		2E7B301E2CDD74BA00A67EEF /* Build configuration list for PBXNativeTarget "MapWalkerUITests" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
 				2E7B301F2CDD74BA00A67EEF /* Debug */,
