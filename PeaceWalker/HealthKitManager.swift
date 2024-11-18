@@ -3,54 +3,77 @@ import HealthKit
 class HealthKitManager {
     static let shared = HealthKitManager()
     private let healthStore = HKHealthStore()
+    private var stepQuery: HKAnchoredObjectQuery?
 
     private init() {}
 
     func requestAuthorization(completion: @escaping (Bool, Error?) -> Void) {
         let stepType = HKQuantityType.quantityType(forIdentifier: .stepCount)!
-        healthStore.requestAuthorization(toShare: [], read: [stepType], completion: completion)
+        let distanceType = HKQuantityType.quantityType(forIdentifier: .distanceWalkingRunning)!
+        healthStore.requestAuthorization(toShare: [], read: [stepType, distanceType], completion: completion)
     }
 
-    func fetchStepsSinceStart(journey: Journey, completion: @escaping (Double) -> Void) {
-        let startDate = Calendar.current.startOfDay(for: Date())
-        let endDate = Date()
-        let predicate = HKQuery.predicateForSamples(withStart: startDate, end: endDate, options: .strictStartDate)
-        let stepType = HKQuantityType.quantityType(forIdentifier: .stepCount)!
+    // Updated method signature to include startDate
+    func startRealTimeTracking(from startDate: Date, completion: @escaping (Int) -> Void) {
+        // Stop any existing query
+        stopRealTimeTracking()
 
-        let query = HKSampleQuery(sampleType: stepType, predicate: predicate, limit: HKObjectQueryNoLimit, sortDescriptors: nil) { _, results, error in
-            guard let samples = results as? [HKQuantitySample], error == nil else {
+        let stepType = HKQuantityType.quantityType(forIdentifier: .stepCount)!
+        let predicate = HKQuery.predicateForSamples(withStart: startDate, end: nil, options: .strictStartDate)
+
+        var anchor: HKQueryAnchor?
+
+        let query = HKAnchoredObjectQuery(type: stepType, predicate: predicate, anchor: anchor, limit: HKObjectQueryNoLimit) { query, samplesOrNil, deletedObjects, newAnchor, error in
+            guard let samples = samplesOrNil as? [HKQuantitySample], error == nil else {
                 completion(0)
                 return
             }
 
-            let totalSteps = samples.reduce(0.0) { $0 + $1.quantity.doubleValue(for: HKUnit.count()) }
-            completion(totalSteps)
+            let newSteps = samples.reduce(0) { $0 + Int($1.quantity.doubleValue(for: HKUnit.count())) }
+            completion(newSteps)
+            anchor = newAnchor
         }
 
-        healthStore.execute(query)
-    }
-
-    func fetchHistoricalSteps(completion: @escaping (Int?, Error?) -> Void) {
-        let startDate = Calendar.current.date(byAdding: .year, value: -1, to: Date())!
-        let endDate = Date()
-        let predicate = HKQuery.predicateForSamples(withStart: startDate, end: endDate, options: .strictStartDate)
-        let stepType = HKQuantityType.quantityType(forIdentifier: .stepCount)!
-
-        let query = HKSampleQuery(sampleType: stepType, predicate: predicate, limit: HKObjectQueryNoLimit, sortDescriptors: nil) { _, results, error in
-            guard let samples = results as? [HKQuantitySample], error == nil else {
-                completion(nil, error)
+        query.updateHandler = { query, samplesOrNil, deletedObjects, newAnchor, error in
+            guard let samples = samplesOrNil as? [HKQuantitySample], error == nil else {
+                completion(0)
                 return
             }
 
-            let totalSteps = samples.reduce(0) { $0 + Int($1.quantity.doubleValue(for: HKUnit.count())) }
-            completion(totalSteps, nil)
+            let newSteps = samples.reduce(0) { $0 + Int($1.quantity.doubleValue(for: HKUnit.count())) }
+            completion(newSteps)
+            anchor = newAnchor
+        }
+
+        healthStore.execute(query)
+        self.stepQuery = query
+    }
+
+    func stopRealTimeTracking() {
+        if let query = stepQuery {
+            healthStore.stop(query)
+            stepQuery = nil
+        }
+    }
+
+    func fetchDistanceSinceStart(journey: Journey, completion: @escaping (Double) -> Void) {
+        let startDate = journey.startDate
+        let endDate = Date()
+        let predicate = HKQuery.predicateForSamples(withStart: startDate, end: endDate, options: .strictStartDate)
+        let distanceType = HKQuantityType.quantityType(forIdentifier: .distanceWalkingRunning)!
+
+        let query = HKSampleQuery(sampleType: distanceType, predicate: predicate, limit: HKObjectQueryNoLimit, sortDescriptors: nil) { _, results, error in
+            guard let samples = results as? [HKQuantitySample], error == nil else {
+                print("[HealthKitManager] Error fetching distance: \(error?.localizedDescription ?? "Unknown error")")
+                completion(0)
+                return
+            }
+
+            let totalDistance = samples.reduce(0.0) { $0 + $1.quantity.doubleValue(for: HKUnit.mile()) }
+            print("[HealthKitManager] Fetched Distance: \(totalDistance) Miles")
+            completion(totalDistance)
         }
 
         healthStore.execute(query)
     }
-
-    func startRealTimeTracking(completion: @escaping (Int) -> Void) {
-        // Implement real-time step tracking logic
-        // Call completion with the updated step count
-    }
-} 
+}
