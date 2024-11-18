@@ -37,3 +37,4 @@ class WalkSession {
         self.distance = distance
     }
 }
+
