@@ -20,6 +20,9 @@
     <string>The app needs access to update your health data based on your step tracking.</string>
     <key>NSLocationAlwaysAndWhenInUseUsageDescription</key>
     <string>Location access is required to show your progress on the map.</string>
+    
+    <key>NSCameraUsageDescription</key>
+    <string>This app requires access to the camera to enable augmented reality features.</string>
 
     <!-- Location Privacy Key -->
     <key>NSLocationWhenInUseUsageDescription</key>

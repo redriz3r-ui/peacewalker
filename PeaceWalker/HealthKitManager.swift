@@ -76,4 +76,51 @@ class HealthKitManager {
 
         healthStore.execute(query)
     }
+
+    // MARK: - Added Methods
+
+    func startObservingSteps(updateHandler: @escaping (Int) -> Void) {
+        print("[HealthKitManager] Starting to observe steps...")
+
+        let stepType = HKQuantityType.quantityType(forIdentifier: .stepCount)!
+
+        // Use HKObserverQuery to observe changes
+        let query = HKObserverQuery(sampleType: stepType, predicate: nil) { [weak self] _, _, error in
+            if let error = error {
+                print("[HealthKitManager] Error observing steps: \(error.localizedDescription)")
+                updateHandler(0)
+                return
+            }
+
+            // Fetch the latest step data
+            self?.fetchLatestSteps { steps in
+                updateHandler(steps)
+            }
+        }
+
+        healthStore.execute(query)
+    }
+
+    private func fetchLatestSteps(completion: @escaping (Int) -> Void) {
+        let calendar = Calendar.current
+        let now = Date()
+        let startOfDay = calendar.startOfDay(for: now) // No need for `guard let` since it's non-optional
+
+        let predicate = HKQuery.predicateForSamples(withStart: startOfDay, end: now, options: .strictStartDate)
+        let stepType = HKQuantityType.quantityType(forIdentifier: .stepCount)!
+
+        let query = HKStatisticsQuery(quantityType: stepType, quantitySamplePredicate: predicate, options: .cumulativeSum) { _, result, error in
+            guard let result = result, let sum = result.sumQuantity() else {
+                print("[HealthKitManager] Error fetching step data: \(error?.localizedDescription ?? "Unknown error")")
+                completion(0)
+                return
+            }
+
+            let stepCount = Int(sum.doubleValue(for: HKUnit.count()))
+            print("[HealthKitManager] Latest Steps: \(stepCount)")
+            completion(stepCount)
+        }
+
+        healthStore.execute(query)
+    }
 }
