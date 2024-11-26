@@ -123,8 +123,8 @@
 			buildConfigurationList = 2E7B30182CDD74BA00A67EEF /* Build configuration list for PBXNativeTarget "MapWalker" */;
 			buildPhases = (
 				2E7B2FF02CDD74B800A67EEF /* Sources */,
-				2E7B2FF12CDD74B800A67EEF /* Frameworks */,
 				2E7B2FF22CDD74B800A67EEF /* Resources */,
+				2E7B2FF12CDD74B800A67EEF /* Frameworks */,
 			);
 			buildRules = (
 			);

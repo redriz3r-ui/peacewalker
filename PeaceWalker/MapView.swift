@@ -234,3 +234,4 @@ struct MapView: UIViewRepresentable {
         return (heading < 0) ? heading + 360 : heading
     }
 }
+
