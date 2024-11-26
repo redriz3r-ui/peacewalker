@@ -11,6 +11,8 @@ struct Pin: Identifiable {
     let coordinate: CLLocationCoordinate2D
     let timestamp: Date = Date()
     var steps: Int? // Dynamically calculated steps
+    var distanceFromUser: Double? // Distance from the user in meters
+    var stepsFromUser: Int? // Steps required to reach the pin
 }
 
 struct RoutePin: Identifiable {
@@ -161,6 +163,16 @@ class NavigationManager: ObservableObject {
             generatePins(around: center, count: 3, radius: 10000)
             generatePins(around: center, count: 5, radius: 5000)
             generatePins(around: center, count: 7, radius: 1000)
+        }
+    }
+    func updatePinMetadata(userLocation: CLLocation) {
+        for (index, pin) in pins.enumerated() {
+            let pinLocation = CLLocation(latitude: pin.coordinate.latitude, longitude: pin.coordinate.longitude)
+            let distance = userLocation.distance(from: pinLocation) // Distance in meters
+            let steps = Int(distance / averageStepLength) // Average step length in meters
+
+            pins[index].distanceFromUser = distance
+            pins[index].stepsFromUser = steps
         }
     }
     
