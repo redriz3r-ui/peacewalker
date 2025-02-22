@@ -6,13 +6,14 @@ import Combine
 import SwiftUI
 
 // MARK: - Shared Models
-struct Pin: Identifiable {
-    let id = UUID()
+struct Pin: Codable, Identifiable {
+    let id: UUID = UUID() // Unique identifier for each pin
     let coordinate: CLLocationCoordinate2D
-    let timestamp: Date = Date()
-    var steps: Int? // Dynamically calculated steps
+    let timestamp: Date = Date() // Time when the pin was created
+    var steps: Int? // Dynamically calculated steps to the pin
     var distanceFromUser: Double? // Distance from the user in meters
     var stepsFromUser: Int? // Steps required to reach the pin
+    
 }
 
 struct RoutePin: Identifiable {
@@ -290,6 +291,19 @@ class NavigationManager: ObservableObject {
         return generatedPins
     }
     
+    // MARK: - Pin Query Helpers
+       func getPin(by id: UUID) -> Pin? {
+           return pins.first(where: { $0.id == id })
+       }
+
+       func getPinsWithinRadius(center: CLLocationCoordinate2D, radius: Double) -> [Pin] {
+           return pins.filter {
+               let location = CLLocation(latitude: $0.coordinate.latitude, longitude: $0.coordinate.longitude)
+               let centerLocation = CLLocation(latitude: center.latitude, longitude: center.longitude)
+               return location.distance(from: centerLocation) <= radius
+           }
+       }
+    
     // MARK: - Daily Pin Refresh
     func startDailyPinRefresh(center: CLLocationCoordinate2D) {
         timer?.invalidate()
@@ -304,6 +318,26 @@ extension Double {
     var radians: Double { self * .pi / 180 }
     var degrees: Double { self * 180 / .pi }
     var toDegrees: Double { self * 180 / .pi }
+}
+
+extension CLLocationCoordinate2D: Codable {
+    enum CodingKeys: String, CodingKey {
+        case latitude
+        case longitude
+    }
+
+    public func encode(to encoder: Encoder) throws {
+        var container = encoder.container(keyedBy: CodingKeys.self)
+        try container.encode(latitude, forKey: .latitude)
+        try container.encode(longitude, forKey: .longitude)
+    }
+
+    public init(from decoder: Decoder) throws {
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+        let latitude = try container.decode(Double.self, forKey: .latitude)
+        let longitude = try container.decode(Double.self, forKey: .longitude)
+        self.init(latitude: latitude, longitude: longitude)
+    }
 }
 
 extension NavigationManager {

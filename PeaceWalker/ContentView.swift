@@ -3,6 +3,7 @@ import Foundation
 import HealthKit
 import CoreLocation
 import MapKit
+import CloudKit
 
 struct ContentView: View {
     // MARK: - State Variables
@@ -15,20 +16,204 @@ struct ContentView: View {
     @State private var followProgress = false
     @State private var isFreeRoam: Bool = true // Default to free roam
     @State private var centerOnUser: Bool = false
-    @State private var remainingRegenerations: Int = 5 // Limit to 5 regenerations per day
+    @State private var remainingRegenerations: Int = 500 // Limit to 5 regenerations per day
     @State private var collectedPinCount: Int = 0
     @State private var totalPins: Int = 0
     @State private var isNearPin: Bool = false
     @State private var nearbyPinIndex: Int? = nil
     @State private var selectedPin: Pin? // To hold the tapped pin's data
     @State private var showPinInfo: Bool = false // To toggle the info view
-    @State private var dailyLimit: Int = 5 // Free limit
+    @State private var dailyLimit: Int = 100 // Free limit
     @State private var isSubscribed: Bool = false // Track subscription status
     @State private var showAlert: Bool = false
     @State private var alertMessage: String = ""
+    @State private var isProgressExpanded: Bool = false
     
     @ObservedObject private var navigationManager = NavigationManager.shared
     @ObservedObject private var locationManager = MapView.LocationManager()
+    
+    struct CreateProfileView: View {
+        @Binding var isCreatingProfile: Bool // Control the modal
+        var onComplete: (String) -> Void // Callback for creating a profile
+
+        @State private var username: String = ""
+
+        var body: some View {
+            VStack(spacing: 20) {
+                Text("Create Your Profile")
+                    .font(.largeTitle)
+                    .fontWeight(.bold)
+
+                TextField("Enter your username", text: $username)
+                    .padding()
+                    .background(Color.gray.opacity(0.2))
+                    .cornerRadius(8)
+
+                Button(action: {
+                    guard !username.isEmpty else { return }
+                    onComplete(username)
+                    isCreatingProfile = false
+                }) {
+                    Text("Create Profile")
+                        .foregroundColor(.white)
+                        .frame(maxWidth: .infinity, minHeight: 50)
+                        .background(Color.blue)
+                        .cornerRadius(8)
+                }
+                .disabled(username.isEmpty)
+
+                Button(action: {
+                    isCreatingProfile = false
+                }) {
+                    Text("Cancel")
+                        .foregroundColor(.red)
+                }
+            }
+            .padding()
+        }
+    }
+    
+    struct ViewProfileView: View {
+        var userProfile: UserProfile // Display the fetched profile
+
+        var body: some View {
+            VStack(spacing: 20) {
+                Text("Your Profile")
+                    .font(.largeTitle)
+                    .fontWeight(.bold)
+
+                Text("Username: \(userProfile.username)")
+                    .font(.headline)
+
+                Text("Steps: \(userProfile.steps)")
+                Text("Miles Walked: \(userProfile.milesWalked, specifier: "%.2f")")
+                Text("Pins Collected: \(userProfile.pinsCollected)")
+
+                Spacer()
+
+                Button(action: {
+                    // Add actions for editing or deleting profile if needed
+                }) {
+                    Text("Edit Profile")
+                        .foregroundColor(.white)
+                        .frame(maxWidth: .infinity, minHeight: 50)
+                        .background(Color.green)
+                        .cornerRadius(8)
+                }
+            }
+            .padding()
+        }
+    }
+    
+    struct CircularProgressView: View {
+        var progress: Double // Progress percentage (0.0 - 1.0)
+        var steps: Int // Current step count
+        var distance: Double // Total distance walked (in miles)
+        var collectedPins: Int // Collected pins
+        var totalPins: Int // Total pins
+        var isJourneyActive: Bool // Determines if a journey is active
+        var onGeneratePins: () -> Void // Action for Generate Pins
+        var onStartEndJourney: () -> Void // Action for Start/End Journey
+
+        var body: some View {
+             ZStack {
+                 // Buttons and progress
+                 HStack(alignment: .center, spacing: 20) {
+                     // Left button: Generate Pins
+                     CircleButtonView(
+                         icon: "plus.circle",
+                         color: .blue,
+                         action: onGeneratePins
+                     )
+                     .offset(y: 50) // Lower button slightly
+
+                     // Circular Progress Bar
+                     ZStack {
+                         // Background circle
+                         Circle()
+                             .stroke(lineWidth: 10)
+                             .opacity(0.3)
+                             .foregroundColor(.gray)
+                             .shadow(color: .gray, radius: 4, x: 0, y: 2)
+
+                         // Solid progress circle with animation
+                         Circle()
+                             .trim(from: 0.0, to: CGFloat(min(progress, 1.0)))
+                             .stroke(
+                                 Color.blue,
+                                 style: StrokeStyle(lineWidth: 10, lineCap: .round, lineJoin: .round)
+                             )
+                             .rotationEffect(Angle(degrees: -90))
+                             .shadow(color: .blue.opacity(0.7), radius: 10, x: 0, y: 4)
+                             .animation(.easeInOut(duration: 0.5), value: progress)
+
+                         // Center text with improved readability
+                         VStack(spacing: 5) {
+                             Text("\(Int(progress * 100))%")
+                                 .font(.largeTitle)
+                                 .fontWeight(.bold)
+                                 .foregroundColor(.white) // Improved readability
+
+                             HStack {
+                                 Image(systemName: "figure.walk")
+                                     .foregroundColor(.white) // Improved readability
+                                 Text("\(steps) Steps")
+                                     .font(.subheadline)
+                                     .foregroundColor(.white) // Improved readability
+                             }
+
+                             HStack {
+                                 Image(systemName: "location.fill")
+                                     .foregroundColor(.white) // Improved readability
+                                 Text(String(format: "%.2f mi", distance))
+                                     .font(.subheadline)
+                                     .foregroundColor(.white) // Improved readability
+                             }
+
+                             HStack {
+                                 Image(systemName: "mappin.circle.fill")
+                                     .foregroundColor(.white) // Improved readability
+                                 Text("\(collectedPins)/\(totalPins) Pins")
+                                     .font(.subheadline)
+                                     .foregroundColor(.white) // Improved readability
+                             }
+                         }
+                     }
+                     .frame(width: 180, height: 180) // Adjust size if needed
+                     .padding(.top, 20)
+
+                     // Right button: Start/End Journey
+                     CircleButtonView(
+                         icon: isJourneyActive ? "stop.circle" : "play.circle",
+                         color: isJourneyActive ? .red : .green,
+                         action: onStartEndJourney
+                     )
+                     .offset(y: 50) // Lower button slightly
+                 }
+             }
+         }
+     }
+
+    struct CircleButtonView: View {
+        let icon: String // SF Symbol for the button icon
+        let color: Color // Background color of the button
+        let action: () -> Void // Action to perform on tap
+
+        var body: some View {
+            Button(action: action) {
+                ZStack {
+                    Circle()
+                        .fill(color)
+                        .frame(width: 60, height: 60)
+
+                    Image(systemName: icon)
+                        .foregroundColor(.white)
+                        .font(.system(size: 30, weight: .bold))
+                }
+            }
+            .shadow(radius: 5)
+        }
+    }
     
     // MARK: - Body
     var body: some View {
@@ -44,40 +229,68 @@ struct ContentView: View {
             
             .frame(maxWidth: .infinity, maxHeight: .infinity)
             
+   
+            
             // Overlay UI
             VStack(spacing: 5) {
-                if currentJourney != nil {
-                    
-                }
-                
+                CircularProgressView(
+                    progress: Double(stepCount) / 10_000.0,
+                    steps: stepCount,
+                    distance: distanceWalked,
+                    collectedPins: collectedPinCount,
+                    totalPins: totalPins,
+                    isJourneyActive: currentJourney != nil,
+                    onGeneratePins: {
+                        if remainingRegenerations > 0 || isSubscribed {
+                            generatePins()
+                        } else {
+                            showAlert = true
+                            alertMessage = "No generations remaining for today. Please wait until reset or subscribe for unlimited generations."
+                        }
+                    },
+                    onStartEndJourney: {
+                        if currentJourney == nil {
+                            if navigationManager.pins.isEmpty {
+                                showAlert = true
+                                alertMessage = "No pins available to start a journey. Generate pins first."
+                            } else {
+                                startNewJourney()
+                            }
+                        } else {
+                            endJourney()
+                        }
+                    }
+                )
+                .padding(.horizontal)
+
                 Spacer()
+
                 if currentJourney == nil {
-                    // Before Journey UI
                     beforeJourneyButtons()
                 } else {
-                    // Active Journey UI
                     activeJourneyUI()
                 }
-                
+
                 progressView() // Persistent daily progress bar
                     .padding(.top, 10)
             }
             .padding()
             .edgesIgnoringSafeArea(.bottom)
             .onAppear {
-                HealthKitManager.shared.requestAuthorization { success, _ in
-                    if success {
-                        print("[onAppear] HealthKit authorization successful.")
-                        startObservingSteps()
-                        startProximityMonitoring() // Start monitoring proximity
-                    } else {
-                        print("[onAppear] HealthKit authorization failed.")
-                    }
-                }
+                startObservingSteps()
+                
+                // Load total collected pins from UserDefaults
+                let totalCollectedPins = UserDefaults.standard.integer(forKey: "totalCollectedPins")
+                AchievementManager.shared.updateProgress(for: "total_50_pins", amount: totalCollectedPins)
+                
+                print("Total collected pins loaded: \(totalCollectedPins)")
+                
                 Timer.scheduledTimer(withTimeInterval: 1.0, repeats: true) { _ in
                     checkPinProximity()
                 }
                 checkDailyReset()
+                
+                
             }
         }
         .alert(isPresented: $showAlert) {
@@ -91,88 +304,20 @@ struct ContentView: View {
     
     // MARK: - Before Journey Buttons
     private func beforeJourneyButtons() -> some View {
-        HStack(spacing: 10) {
-            // Generate Pins Button
-            Button(action: {
-                if remainingRegenerations > 0 || isSubscribed {
-                    generatePins()
-                } else {
-                    showAlert = true
-                    alertMessage = "No generations remaining for today. Please wait until reset or subscribe for unlimited generations."
-                }
-            }) {
-                VStack {
-                    Text(remainingRegenerations > 0 || isSubscribed ? "Generate Pins" : "No Generations Left")
-                        .font(.headline)
-                        .foregroundColor(.white)
-                }
-                .frame(maxWidth: .infinity, minHeight: 50)
-                .background((remainingRegenerations > 0 || isSubscribed) ? Color.blue.opacity(0.7) : Color.gray.opacity(0.7))
-                .cornerRadius(8)
-            }
-            .disabled(remainingRegenerations <= 0 && !isSubscribed) // Disable button if no regenerations left and user isn't subscribed
-            
-            // Start Journey Button
+        VStack {
             if remainingRegenerations <= 0 && !isSubscribed && navigationManager.pins.isEmpty {
                 CountdownTimerView() // Show countdown when out of generations and no pins are available
                     .frame(maxWidth: .infinity, minHeight: 50)
                     .background(Color.gray.opacity(0.7))
                     .cornerRadius(8)
-            } else {
-                Button(action: {
-                    if navigationManager.pins.isEmpty {
-                        showAlert = true
-                        alertMessage = "No pins available to start a journey. Generate pins first."
-                    } else {
-                        startNewJourney()
-                    }
-                }) {
-                    VStack {
-                        Image(systemName: "play.fill")
-                            .font(.headline)
-                        Text("Start Journey")
-                            .font(.headline)
-                    }
-                    .frame(maxWidth: .infinity, minHeight: 50)
-                    .background(currentJourney == nil ? Color.green.opacity(0.7) : Color.gray.opacity(0.7))
-                    .cornerRadius(8)
-                    .foregroundColor(.white)
-                }
-                .disabled(currentJourney != nil) // Disable if a journey is already active
             }
         }
-        .padding(10) // Add padding around the buttons
+        .padding(10) // Add padding around the timer (if displayed)
     }
     
     // MARK: - Active Journey UI
     private func activeJourneyUI() -> some View {
         VStack(spacing: 10) {
-            HStack {
-                Button(action: {
-                    endJourney()
-                }) {
-                    Text("End Journey")
-                        .font(.headline)
-                        .padding(8)
-                        .frame(maxWidth: .infinity, minHeight: 50)
-                        .background(Color.red.opacity(0.8))
-                        .cornerRadius(8)
-                        .foregroundColor(.white)
-                }
-                
-                HStack {
-                    ForEach(0..<totalPins, id: \.self) { index in
-                        Image(systemName: index < collectedPinCount ? "checkmark.circle.fill" : "circle")
-                            .foregroundColor(index < collectedPinCount ? .white : .white)
-                    }
-                }
-                .font(.subheadline)
-                .foregroundColor(.white)
-                .padding(8)
-                .frame(maxWidth: .infinity, minHeight: 50)
-                .background(Color.orange.opacity(0.8))
-                .cornerRadius(8)
-            }
             
             // Collect Pin Button (always visible)
             Button(action: {
@@ -213,20 +358,24 @@ struct ContentView: View {
     }
     // MARK: - Progress View
     private func progressView() -> some View {
-        VStack(spacing: 10) {
-            VStack(spacing: 5) {
+        let boxHeight: CGFloat = isProgressExpanded ? UIScreen.main.bounds.height / 3 + 100 : 100
+
+        return ZStack {
+            VStack(spacing: 10) {
                 HStack {
                     Text("Today's Steps: \(stepCount)")
                         .font(.headline)
+                        .foregroundColor(.white)
+                    Spacer()
                 }
                 .padding(.horizontal)
-                
+
                 GeometryReader { geometry in
                     ZStack(alignment: .leading) {
                         RoundedRectangle(cornerRadius: 10)
                             .fill(Color.gray.opacity(0.3))
                             .frame(height: 20)
-                        
+
                         LinearGradient(
                             gradient: Gradient(colors: [Color.blue, Color.green]),
                             startPoint: .leading,
@@ -241,14 +390,81 @@ struct ContentView: View {
                 }
                 .frame(height: 20)
                 .padding(.horizontal)
+
+                if isProgressExpanded {
+                    ScrollView {
+                        // Milestone Achievements
+                        achievementSection(title: "Milestone Achievements") {
+                            !$0.isUnlocked && $0.completedTiers.isEmpty
+                        }
+                        // Unlocked Achievements
+                        achievementSection(title: "Unlocked Achievements") {
+                            $0.isUnlocked || !$0.completedTiers.isEmpty
+                        }
+                    }
+                    .frame(maxHeight: UIScreen.main.bounds.height / 3)
+                }
             }
             .padding()
-            .background(Color.black.opacity(0.7))
+            .frame(height: boxHeight)
+            .background(Color.black.opacity(0.8))
             .cornerRadius(15)
             .shadow(radius: 5)
+            .padding(.horizontal)
+
+            Button(action: {
+                withAnimation(.spring()) {
+                    isProgressExpanded.toggle()
+                }
+            }) {
+                Image(systemName: isProgressExpanded ? "chevron.down" : "chevron.up")
+                    .resizable()
+                    .frame(width: 20, height: 10)
+                    .foregroundColor(.white)
+                    .padding()
+            }
+            .offset(y: -(boxHeight / 2 + 10))
         }
     }
+
+    private func achievementSection(title: String, filter: (Achievement) -> Bool) -> some View {
+        VStack(alignment: .leading, spacing: 15) {
+            Text(title)
+                .font(.headline)
+                .foregroundColor(.white)
+                .padding(.bottom, 5)
+
+            ForEach(AchievementManager.shared.achievements.filter(filter)) { achievement in
+                AchievementRow(achievement: achievement)
+            }
+        }
+        .padding(.horizontal)
+    }
     
+    private struct AchievementRow: View {
+        let achievement: Achievement
+
+        var body: some View {
+            VStack(alignment: .leading) {
+                HStack {
+                    // Change the star based on `isUnlocked`
+                    Image(systemName: achievement.isUnlocked ? "star.fill" : "star")
+                        .foregroundColor(achievement.isUnlocked ? .yellow : .gray)
+                    Text(achievement.title)
+                        .font(.headline)
+                        .foregroundColor(.white)
+                }
+
+                // Combine progress and description into one line
+                Text("\(achievement.progress)/\(achievement.tiers[achievement.currentTierIndex].goal) - \(achievement.description)")
+                    .font(.subheadline)
+                    .foregroundColor(.white)
+            }
+            .padding()
+            .background(achievement.isUnlocked ? Color.green.opacity(0.8) : Color.black.opacity(0.8))
+            .cornerRadius(10)
+        }
+    }
     // MARK: - Generate Pins
     private func generatePins() {
         guard remainingRegenerations > 0 || isSubscribed else {
@@ -351,20 +567,40 @@ struct ContentView: View {
     }
     
     
+    
     private func collectPin(at index: Int) {
-        guard index >= 0 && index < navigationManager.pins.count else { return }
+        guard index >= 0 && index < navigationManager.pins.count else {
+            print("[Error] Invalid pin index: \(index).")
+            return
+        }
 
         let collectedPin = navigationManager.pins[index]
+
+        // Ensure the pin ID is a string
+        let pinId = collectedPin.id.uuidString
+
+
+        // Remove the pin locally
         navigationManager.pins.remove(at: index)
         collectedPinCount += 1
+        
 
         // Trigger haptic feedback
-        let generator = UIImpactFeedbackGenerator(style: .medium)
+        let generator = UIImpactFeedbackGenerator(style: .heavy)
         generator.impactOccurred()
+        
+        // Save collected pin count persistently
+        let totalCollectedPins = UserDefaults.standard.integer(forKey: "totalCollectedPins") + 1
+        UserDefaults.standard.set(totalCollectedPins, forKey: "totalCollectedPins")
 
+        // Notify AchievementManager
+        AchievementManager.shared.updateProgress(for: "total_50_pins", amount: 1)
+        AchievementManager.shared.updateTimedCollection(for: Date(), pinsCollected: 1)
+
+        print("[Achievements] Collected Pin \(collectedPinCount).")
         print("[Collection] Collected Pin at \(collectedPin.coordinate.latitude), \(collectedPin.coordinate.longitude).")
 
-        // Check if all pins are collected
+        // Handle all pins collected
         if navigationManager.pins.isEmpty {
             handleAllPinsCollected()
         }
@@ -419,6 +655,9 @@ struct ContentView: View {
                 if incrementalSteps > 0 {
                     self.stepCount += incrementalSteps
                     baselineSteps = newSteps
+                    
+                    AchievementManager.shared.updateProgress(for: "daily_10000_steps", amount: incrementalSteps)
+                                   print("[Achievements] Updated step count to \(self.stepCount).")
 
                     print("[Real-Time] Incremental steps: \(incrementalSteps). Total steps: \(self.stepCount).")
 
@@ -500,3 +739,5 @@ struct ContentView: View {
         }
     }
 }
+
+

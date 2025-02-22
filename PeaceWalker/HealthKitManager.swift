@@ -10,7 +10,17 @@ class HealthKitManager {
     func requestAuthorization(completion: @escaping (Bool, Error?) -> Void) {
         let stepType = HKQuantityType.quantityType(forIdentifier: .stepCount)!
         let distanceType = HKQuantityType.quantityType(forIdentifier: .distanceWalkingRunning)!
-        healthStore.requestAuthorization(toShare: [], read: [stepType, distanceType], completion: completion)
+
+        healthStore.requestAuthorization(toShare: [], read: [stepType, distanceType]) { success, error in
+            if success {
+                print("[HealthKitManager] Authorization successful")
+            } else if let error = error {
+                print("[HealthKitManager] Authorization failed: \(error.localizedDescription)")
+            } else {
+                print("[HealthKitManager] Authorization failed for an unknown reason.")
+            }
+            completion(success, error)
+        }
     }
 
     // Updated method signature to include startDate

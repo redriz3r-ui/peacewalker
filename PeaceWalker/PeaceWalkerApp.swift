@@ -1,5 +1,6 @@
 import SwiftUI
 import SwiftData
+import CloudKit
 
 @main
 struct PeaceWalkerApp: App {
@@ -10,7 +11,6 @@ struct PeaceWalkerApp: App {
             if showSplashScreen {
                 SplashScreenView(showSplashScreen: $showSplashScreen)
                     .onDisappear {
-                        // Set the flag in UserDefaults to indicate the splash screen has been shown
                         UserDefaults.standard.set(true, forKey: "hasShownSplashScreen")
                     }
             } else {

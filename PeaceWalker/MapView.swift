@@ -85,8 +85,8 @@ struct MapView: UIViewRepresentable {
             let camera = MKMapCamera(
                 lookingAtCenter: userLocation,
                 fromDistance: 3500,
-                pitch: 60,
-                heading: 0
+                pitch: 70, // Tilt angle in degrees
+                heading: -45 // Orientation (0 = north, 90 = east, etc.)
             )
             mapView.setCamera(camera, animated: true)
             didCenterInitially = true
@@ -96,18 +96,17 @@ struct MapView: UIViewRepresentable {
     }
     
     func updateUIView(_ mapView: MKMapView, context: Context) {
-        
         if centerOnUser, let userLocation = locationManager.location {
             let camera = MKMapCamera(
                 lookingAtCenter: userLocation,
                 fromDistance: 2500,
                 pitch: 60,
-                heading: 0
+                heading: 45
             )
             mapView.setCamera(camera, animated: true)
             centerOnUser = false
         }
-        
+
         let existingAnnotations = mapView.annotations.compactMap { $0 as? MKPointAnnotation }
         let newAnnotations = NavigationManager.shared.pins.map { pin -> MKPointAnnotation in
             let annotation = MKPointAnnotation()
@@ -115,25 +114,27 @@ struct MapView: UIViewRepresentable {
             annotation.title = "Pin"
             return annotation
         }
-        
+
         // Find annotations to add
         let annotationsToAdd = newAnnotations.filter { newAnnotation in
             !existingAnnotations.contains { $0.coordinate.latitude == newAnnotation.coordinate.latitude &&
                 $0.coordinate.longitude == newAnnotation.coordinate.longitude }
         }
-        
+
         // Find annotations to remove
         let annotationsToRemove = existingAnnotations.filter { existingAnnotation in
             !newAnnotations.contains { $0.coordinate.latitude == existingAnnotation.coordinate.latitude &&
                 $0.coordinate.longitude == existingAnnotation.coordinate.longitude }
         }
-        
+
         // Update annotations on the map
         mapView.removeAnnotations(annotationsToRemove)
         mapView.addAnnotations(annotationsToAdd)
-        
-        // Center map on pins if needed
-        centerMapOnPins(mapView)
+
+        // **Conditionally center on pins only if new annotations were added and not in free roam mode**
+        if !isFreeRoam && !annotationsToAdd.isEmpty {
+            centerMapOnPins(mapView)
+        }
     }
     
     func centerMapOnPins(_ mapView: MKMapView) {

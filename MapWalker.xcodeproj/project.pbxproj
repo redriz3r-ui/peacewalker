@@ -419,7 +419,7 @@
 				ASSETCATALOG_COMPILER_INCLUDE_ALL_APPICON_ASSETS = YES;
 				CODE_SIGN_ENTITLEMENTS = PeaceWalker/PeaceWalker.entitlements;
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 1;
+				CURRENT_PROJECT_VERSION = 3;
 				DEVELOPMENT_ASSET_PATHS = "\"PeaceWalker/Preview Content\"";
 				DEVELOPMENT_TEAM = H37S63Z3YA;
 				ENABLE_PREVIEWS = YES;
@@ -427,6 +427,11 @@
 				INFOPLIST_FILE = PeaceWalker/Info.plist;
 				INFOPLIST_KEY_CFBundleDisplayName = MapWalker;
 				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.healthcare-fitness";
+				INFOPLIST_KEY_NSCameraUsageDescription = "This app requires access to the camera to enable augmented reality features.";
+				INFOPLIST_KEY_NSHealthShareUsageDescription = "The app needs access to your health data to display your step count.";
+				INFOPLIST_KEY_NSHealthUpdateUsageDescription = "The app needs access to update your health data based on your step tracking.";
+				INFOPLIST_KEY_NSLocationAlwaysAndWhenInUseUsageDescription = "Location access is required to show your progress on the map.";
+				INFOPLIST_KEY_NSLocationWhenInUseUsageDescription = "The app needs access to your location to track your virtual journey.";
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
 				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
@@ -453,7 +458,7 @@
 				ASSETCATALOG_COMPILER_INCLUDE_ALL_APPICON_ASSETS = YES;
 				CODE_SIGN_ENTITLEMENTS = PeaceWalker/PeaceWalker.entitlements;
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 1;
+				CURRENT_PROJECT_VERSION = 3;
 				DEVELOPMENT_ASSET_PATHS = "\"PeaceWalker/Preview Content\"";
 				DEVELOPMENT_TEAM = H37S63Z3YA;
 				ENABLE_PREVIEWS = YES;
@@ -461,6 +466,11 @@
 				INFOPLIST_FILE = PeaceWalker/Info.plist;
 				INFOPLIST_KEY_CFBundleDisplayName = MapWalker;
 				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.healthcare-fitness";
+				INFOPLIST_KEY_NSCameraUsageDescription = "This app requires access to the camera to enable augmented reality features.";
+				INFOPLIST_KEY_NSHealthShareUsageDescription = "The app needs access to your health data to display your step count.";
+				INFOPLIST_KEY_NSHealthUpdateUsageDescription = "The app needs access to update your health data based on your step tracking.";
+				INFOPLIST_KEY_NSLocationAlwaysAndWhenInUseUsageDescription = "Location access is required to show your progress on the map.";
+				INFOPLIST_KEY_NSLocationWhenInUseUsageDescription = "The app needs access to your location to track your virtual journey.";
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
 				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
