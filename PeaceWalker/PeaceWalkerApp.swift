@@ -1,6 +1,13 @@
+//
+//  PeaceWalkerApp.swift
+//  MapWalker
+//
+//  Created by Robe on 2/22/25.
+//
+
+
 import SwiftUI
 import SwiftData
-import CloudKit
 
 @main
 struct PeaceWalkerApp: App {
@@ -10,12 +17,9 @@ struct PeaceWalkerApp: App {
         WindowGroup {
             if showSplashScreen {
                 SplashScreenView(showSplashScreen: $showSplashScreen)
-                    .onDisappear {
-                        UserDefaults.standard.set(true, forKey: "hasShownSplashScreen")
-                    }
             } else {
                 ContentView()
-                    .modelContainer(for: [Journey.self, WalkSession.self])
+                    .modelContainer(for: [UserProfile.self, Journey.self, WalkSession.self])
             }
         }
     }

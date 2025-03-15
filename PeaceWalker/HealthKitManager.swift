@@ -1,136 +1,207 @@
-import HealthKit
+//
+//  HealthKitManager.swift
+//  MapWalker
+//
+//  Created by Robe on 2/22/25.
+//
 
-class HealthKitManager {
+import HealthKit
+import Combine
+
+class HealthKitManager: ObservableObject {
     static let shared = HealthKitManager()
     private let healthStore = HKHealthStore()
-    private var stepQuery: HKAnchoredObjectQuery?
+    @Published var stepCount: Int = 0
+    @Published var distance: Double = 0.0 // in miles
 
-    private init() {}
-
-    func requestAuthorization(completion: @escaping (Bool, Error?) -> Void) {
-        let stepType = HKQuantityType.quantityType(forIdentifier: .stepCount)!
-        let distanceType = HKQuantityType.quantityType(forIdentifier: .distanceWalkingRunning)!
-
-        healthStore.requestAuthorization(toShare: [], read: [stepType, distanceType]) { success, error in
-            if success {
-                print("[HealthKitManager] Authorization successful")
-            } else if let error = error {
-                print("[HealthKitManager] Authorization failed: \(error.localizedDescription)")
-            } else {
-                print("[HealthKitManager] Authorization failed for an unknown reason.")
-            }
-            completion(success, error)
-        }
+    private init() {
+        requestAuthorization()
+            .sink(receiveCompletion: { completion in
+                if case .failure(let error) = completion {
+                    print("Authorization failed: \(error)")
+                }
+            }, receiveValue: { success in
+                if success {
+                    self.startObservingSteps()
+                    self.startObservingDistance()
+                    self.fetchTodayDataWithRetry()
+                }
+            })
+            .store(in: &AnyCancellableStorage.shared.cancellables)
     }
 
-    // Updated method signature to include startDate
-    func startRealTimeTracking(from startDate: Date, completion: @escaping (Int) -> Void) {
-        // Stop any existing query
-        stopRealTimeTracking()
-
-        let stepType = HKQuantityType.quantityType(forIdentifier: .stepCount)!
-        let predicate = HKQuery.predicateForSamples(withStart: startDate, end: nil, options: .strictStartDate)
-
-        var anchor: HKQueryAnchor?
-
-        let query = HKAnchoredObjectQuery(type: stepType, predicate: predicate, anchor: anchor, limit: HKObjectQueryNoLimit) { query, samplesOrNil, deletedObjects, newAnchor, error in
-            guard let samples = samplesOrNil as? [HKQuantitySample], error == nil else {
-                completion(0)
+    func requestAuthorization() -> Future<Bool, Error> {
+        Future { promise in
+            guard HKHealthStore.isHealthDataAvailable() else {
+                promise(.failure(NSError(domain: "", code: -1, userInfo: [NSLocalizedDescriptionKey: "HealthKit not available"])))
                 return
             }
-
-            let newSteps = samples.reduce(0) { $0 + Int($1.quantity.doubleValue(for: HKUnit.count())) }
-            completion(newSteps)
-            anchor = newAnchor
-        }
-
-        query.updateHandler = { query, samplesOrNil, deletedObjects, newAnchor, error in
-            guard let samples = samplesOrNil as? [HKQuantitySample], error == nil else {
-                completion(0)
-                return
+            
+            let typesToRead: Set = [
+                HKQuantityType.quantityType(forIdentifier: .stepCount)!,
+                HKQuantityType.quantityType(forIdentifier: .distanceWalkingRunning)!
+            ]
+            
+            self.healthStore.requestAuthorization(toShare: [], read: typesToRead) { success, error in
+                if let error = error {
+                    promise(.failure(error))
+                } else {
+                    promise(.success(success))
+                }
             }
-
-            let newSteps = samples.reduce(0) { $0 + Int($1.quantity.doubleValue(for: HKUnit.count())) }
-            completion(newSteps)
-            anchor = newAnchor
-        }
-
-        healthStore.execute(query)
-        self.stepQuery = query
-    }
-
-    func stopRealTimeTracking() {
-        if let query = stepQuery {
-            healthStore.stop(query)
-            stepQuery = nil
         }
     }
 
-    func fetchDistanceSinceStart(journey: Journey, completion: @escaping (Double) -> Void) {
-        let startDate = journey.startDate
-        let endDate = Date()
-        let predicate = HKQuery.predicateForSamples(withStart: startDate, end: endDate, options: .strictStartDate)
-        let distanceType = HKQuantityType.quantityType(forIdentifier: .distanceWalkingRunning)!
-
-        let query = HKSampleQuery(sampleType: distanceType, predicate: predicate, limit: HKObjectQueryNoLimit, sortDescriptors: nil) { _, results, error in
-            guard let samples = results as? [HKQuantitySample], error == nil else {
-                print("[HealthKitManager] Error fetching distance: \(error?.localizedDescription ?? "Unknown error")")
-                completion(0)
-                return
+    public func fetchTodayDataWithRetry(attempt: Int = 0) {
+        fetchLatestSteps { steps in
+            print("Fetched steps (attempt \(attempt + 1)): \(steps)")
+            if steps == 0 && attempt < 3 {
+                DispatchQueue.main.asyncAfter(deadline: .now() + 3) {
+                    self.fetchTodayDataWithRetry(attempt: attempt + 1)
+                }
             }
-
-            let totalDistance = samples.reduce(0.0) { $0 + $1.quantity.doubleValue(for: HKUnit.mile()) }
-            print("[HealthKitManager] Fetched Distance: \(totalDistance) Miles")
-            completion(totalDistance)
         }
-
-        healthStore.execute(query)
+        fetchLatestDistance { distance in
+            print("Fetched distance (attempt \(attempt + 1)): \(distance)")
+            if distance == 0 && attempt < 3 {
+                DispatchQueue.main.asyncAfter(deadline: .now() + 3) {
+                    self.fetchTodayDataWithRetry(attempt: attempt + 1)
+                }
+            }
+        }
     }
 
-    // MARK: - Added Methods
-
-    func startObservingSteps(updateHandler: @escaping (Int) -> Void) {
-        print("[HealthKitManager] Starting to observe steps...")
-
+    func startObservingSteps() {
         let stepType = HKQuantityType.quantityType(forIdentifier: .stepCount)!
-
-        // Use HKObserverQuery to observe changes
         let query = HKObserverQuery(sampleType: stepType, predicate: nil) { [weak self] _, _, error in
-            if let error = error {
-                print("[HealthKitManager] Error observing steps: \(error.localizedDescription)")
-                updateHandler(0)
-                return
-            }
-
-            // Fetch the latest step data
-            self?.fetchLatestSteps { steps in
-                updateHandler(steps)
+            if error == nil {
+                print("Step count observer triggered")
+                self?.fetchLatestSteps()
+            } else {
+                print("Step count observer error: \(String(describing: error))")
             }
         }
-
         healthStore.execute(query)
+        
+        healthStore.enableBackgroundDelivery(for: stepType, frequency: .immediate) { success, error in
+            if !success {
+                print("Background delivery for steps failed: \(String(describing: error))")
+            }
+        }
     }
 
-    private func fetchLatestSteps(completion: @escaping (Int) -> Void) {
-        let calendar = Calendar.current
-        let now = Date()
-        let startOfDay = calendar.startOfDay(for: now) // No need for `guard let` since it's non-optional
+    func startObservingDistance() {
+        let distanceType = HKQuantityType.quantityType(forIdentifier: .distanceWalkingRunning)!
+        let query = HKObserverQuery(sampleType: distanceType, predicate: nil) { [weak self] _, _, error in
+            if error == nil {
+                print("Distance observer triggered")
+                self?.fetchLatestDistance()
+            } else {
+                print("Distance observer error: \(String(describing: error))")
+            }
+        }
+        healthStore.execute(query)
+        
+        healthStore.enableBackgroundDelivery(for: distanceType, frequency: .immediate) { success, error in
+            if !success {
+                print("Background delivery for distance failed: \(String(describing: error))")
+            }
+        }
+    }
 
-        let predicate = HKQuery.predicateForSamples(withStart: startOfDay, end: now, options: .strictStartDate)
+    private func fetchLatestSteps(completion: ((Int) -> Void)? = nil) {
+        let startOfDay = Calendar.current.startOfDay(for: Date())
+        let predicate = HKQuery.predicateForSamples(withStart: startOfDay, end: Date(), options: .strictStartDate)
         let stepType = HKQuantityType.quantityType(forIdentifier: .stepCount)!
-
-        let query = HKStatisticsQuery(quantityType: stepType, quantitySamplePredicate: predicate, options: .cumulativeSum) { _, result, error in
-            guard let result = result, let sum = result.sumQuantity() else {
-                print("[HealthKitManager] Error fetching step data: \(error?.localizedDescription ?? "Unknown error")")
-                completion(0)
-                return
+        let query = HKStatisticsQuery(quantityType: stepType, quantitySamplePredicate: predicate, options: .cumulativeSum) { [weak self] _, result, error in
+            let steps = Int(result?.sumQuantity()?.doubleValue(for: HKUnit.count()) ?? 0)
+            DispatchQueue.main.async {
+                self?.stepCount = steps
+                completion?(steps)
             }
-
-            let stepCount = Int(sum.doubleValue(for: HKUnit.count()))
-            print("[HealthKitManager] Latest Steps: \(stepCount)")
-            completion(stepCount)
         }
-
         healthStore.execute(query)
     }
+
+    private func fetchLatestDistance(completion: ((Double) -> Void)? = nil) {
+        let startOfDay = Calendar.current.startOfDay(for: Date())
+        let predicate = HKQuery.predicateForSamples(withStart: startOfDay, end: Date(), options: .strictStartDate)
+        let distanceType = HKQuantityType.quantityType(forIdentifier: .distanceWalkingRunning)!
+        let query = HKStatisticsQuery(quantityType: distanceType, quantitySamplePredicate: predicate, options: .cumulativeSum) { [weak self] _, result, error in
+            let distance = (result?.sumQuantity()?.doubleValue(for: HKUnit.meter()) ?? 0) * 0.000621371 // Convert meters to miles
+            DispatchQueue.main.async {
+                self?.distance = distance
+                completion?(distance)
+            }
+        }
+        healthStore.execute(query)
+    }
+
+    func fetchHistory(completion: @escaping ([ActivityEntry]) -> Void) {
+        let stepType = HKQuantityType.quantityType(forIdentifier: .stepCount)!
+        let distanceType = HKQuantityType.quantityType(forIdentifier: .distanceWalkingRunning)!
+        
+        let startDate = Calendar.current.date(byAdding: .month, value: -12, to: Date())!
+        let predicate = HKQuery.predicateForSamples(withStart: startDate, end: Date(), options: .strictStartDate)
+        
+        var dailyEntries: [Date: ActivityEntry] = [:]
+        
+        let stepQuery = HKStatisticsCollectionQuery(
+            quantityType: stepType,
+            quantitySamplePredicate: predicate,
+            options: .cumulativeSum,
+            anchorDate: startDate,
+            intervalComponents: DateComponents(day: 1)
+        )
+        
+        stepQuery.initialResultsHandler = { [weak self] query, results, error in
+            guard let results = results else {
+                completion([])
+                return
+            }
+            
+            let distanceQuery = HKStatisticsCollectionQuery(
+                quantityType: distanceType,
+                quantitySamplePredicate: predicate,
+                options: .cumulativeSum,
+                anchorDate: startDate,
+                intervalComponents: DateComponents(day: 1)
+            )
+            
+            distanceQuery.initialResultsHandler = { query, distanceResults, error in
+                guard let distanceResults = distanceResults else {
+                    completion([])
+                    return
+                }
+                
+                results.enumerateStatistics(from: startDate, to: Date()) { stepStat, _ in
+                    let date = stepStat.startDate
+                    let steps = Int(stepStat.sumQuantity()?.doubleValue(for: HKUnit.count()) ?? 0)
+                    let distanceStat = distanceResults.statistics(for: date)
+                    let distance = (distanceStat?.sumQuantity()?.doubleValue(for: HKUnit.meter()) ?? 0) * 0.000621371 // Convert to miles
+                    
+                    dailyEntries[date] = ActivityEntry(
+                        date: date,
+                        steps: steps,
+                        distance: distance,
+                        duration: nil
+                    )
+                }
+                
+                let sortedEntries = dailyEntries.values.sorted { $0.date > $1.date }
+                DispatchQueue.main.async {
+                    completion(sortedEntries)
+                }
+            }
+            
+            self?.healthStore.execute(distanceQuery)
+        }
+        
+        healthStore.execute(stepQuery)
+    }
+}
+
+class AnyCancellableStorage {
+    static let shared = AnyCancellableStorage()
+    var cancellables = Set<AnyCancellable>()
 }
